@@ -65,8 +65,11 @@ class CocktailBotApp(App):
     def go_home(self):
         if not hasattr(self, "sm"):
             return
-        self.sm.current = "home"
-        self.refresh_home()
+        if self.sm.current != "home":
+            self.sm.current = "home"
+            return
+
+        Clock.schedule_once(lambda *_: self.refresh_home(), 0)
 
     def go_settings(self):
         if not hasattr(self, "sm"):
