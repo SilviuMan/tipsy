@@ -88,7 +88,9 @@ class HomeScreen(Screen):
 
         return image_source if Path(image_source).exists() else fallback
 
-    def select_by_index(self, idx: int):
+    def select_by_index(self, idx: Optional[int]):
+        if idx is None:
+            return
         if idx < 0 or idx >= len(self.recipes_ui):
             return
         item = self.recipes_ui[idx]
@@ -96,7 +98,7 @@ class HomeScreen(Screen):
         self.selected_recipe_name = item["name"]
         self.selected_available = item["available"]
 
-    def on_carousel_index(self, index: int):
+    def on_carousel_index(self, index: Optional[int]):
         self.select_by_index(index)
 
     def prepare_selected(self):
