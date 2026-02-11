@@ -3,6 +3,7 @@ from pathlib import Path
 from time import monotonic
 from typing import Dict, List, Optional
 
+from kivy.app import App
 from kivy.clock import Clock
 from kivy.properties import BooleanProperty, ListProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
@@ -22,6 +23,16 @@ class HeaderBar(BoxLayout):
     settings_disabled = BooleanProperty(False)
     home_icon_url = StringProperty("assets/icons/home.png")
     settings_icon_url = StringProperty("assets/icons/settings.png")
+
+    def go_home(self):
+        app = App.get_running_app()
+        if app and hasattr(app, "go_home"):
+            app.go_home()
+
+    def go_settings(self):
+        app = App.get_running_app()
+        if app and hasattr(app, "go_settings"):
+            app.go_settings()
 
 
 class CocktailCard(BoxLayout):

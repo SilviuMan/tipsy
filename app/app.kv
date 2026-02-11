@@ -20,7 +20,7 @@
         Button:
             text: "Home"
             disabled: root.home_disabled
-            on_release: app.go_home()
+            on_release: root.go_home()
     Label:
         text: "CocktailBot"
         font_size: '28sp'
@@ -29,7 +29,7 @@
         Button:
             text: "Settings"
             disabled: root.settings_disabled
-            on_release: app.go_settings()
+            on_release: root.go_settings()
         AsyncImage:
             source: root.settings_icon_url
             size_hint_x: None

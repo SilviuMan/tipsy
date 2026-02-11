@@ -42,7 +42,7 @@ sudo apt install -y \
 ```
 
 ### 2) Create a virtual environment (recommended)
-Run these commands from the project folder (`/workspace/tipsy` or your clone path):
+Run these commands from your project folder on Raspberry Pi OS (for example `~/tipsy`):
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
@@ -70,7 +70,7 @@ Create a launcher script:
 ```bash
 cat > ~/Desktop/run-cocktailbot.sh << 'EOF'
 #!/usr/bin/env bash
-cd /workspace/tipsy
+cd ~/tipsy
 source .venv/bin/activate
 python main.py
 EOF
@@ -86,13 +86,13 @@ Name=CocktailBot
 Comment=Start CocktailBot
 Exec=/home/pi/Desktop/run-cocktailbot.sh
 Terminal=false
-Path=/workspace/tipsy
+Path=/home/pi/tipsy
 Icon=utilities-terminal
 EOF
 chmod +x ~/Desktop/CocktailBot.desktop
 ```
 
-> If your username is not `pi`, change `/home/pi/...` in `Exec=` to your home path.
+> If your username or project folder is different, update both `Exec=` and `Path=` in the `.desktop` file.
 
 ### Option B: Build a single-file binary with PyInstaller
 ```bash
