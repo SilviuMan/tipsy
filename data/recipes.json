@@ -1,0 +1,31 @@
+{
+  "cocktails": [
+    {
+      "id": "whisky_cola",
+      "name": "Whisky Cola",
+      "image": "atlas://data/images/defaulttheme/button",
+      "steps": [
+        {"ingredient": "whisky", "ml": 50},
+        {"ingredient": "cola", "ml": 150}
+      ]
+    },
+    {
+      "id": "vodka_sprite",
+      "name": "Vodka Sprite",
+      "image": "atlas://data/images/defaulttheme/button",
+      "steps": [
+        {"ingredient": "vodka", "ml": 50},
+        {"ingredient": "sprite", "ml": 150}
+      ]
+    },
+    {
+      "id": "gin_tonic",
+      "name": "Gin Tonic",
+      "image": "atlas://data/images/defaulttheme/button",
+      "steps": [
+        {"ingredient": "gin", "ml": 50},
+        {"ingredient": "tonic", "ml": 150}
+      ]
+    }
+  ]
+}
