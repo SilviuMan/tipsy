@@ -1,6 +1,7 @@
 from functools import partial
 from pathlib import Path
-from typing import List, Optional
+from time import monotonic
+from typing import Dict, List, Optional
 
 from kivy.clock import Clock
 from kivy.properties import BooleanProperty, ListProperty, StringProperty
@@ -176,6 +177,12 @@ class SettingsScreen(Screen):
 
 
 class CalibrationScreen(Screen):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._manual_started_at: Dict[int, float] = {}
+        self._manual_elapsed_s: Dict[int, float] = {}
+        self._manual_buttons: Dict[int, Button] = {}
+
     def on_pre_enter(self, *args):
         self.refresh()
 
@@ -184,39 +191,132 @@ class CalibrationScreen(Screen):
         container.clear_widgets()
         app = self.manager.app
         for pump in app.pump_store.pumps:
-            row = BoxLayout(size_hint_y=None, height=120, spacing=8)
+            panel = BoxLayout(orientation="vertical", size_hint_y=None, height=210, spacing=6)
+
             info = Label(
                 text=f"Pump {pump['id']} GPIO {pump['gpio']} | Ingredient: {pump.get('ingredient') or '<unassigned>'} | ml/s: {pump.get('ml_per_sec', 0):.2f}",
                 halign="left",
                 valign="middle",
+                size_hint_y=None,
+                height=42,
             )
             info.bind(size=lambda inst, _: setattr(inst, "text_size", inst.size))
 
-            prime_btn = Button(text="Prime 2s", size_hint_x=None, width=150)
+            controls = BoxLayout(size_hint_y=None, height=80, spacing=8)
+            prime_btn = Button(text="Prime 2s", size_hint_x=None, width=120)
             prime_btn.bind(on_release=partial(self.prime, pump["id"]))
 
-            measure_input = TextInput(hint_text="ml in 10s", multiline=False, input_filter="float", size_hint_x=None, width=150)
-            save_btn = Button(text="Save ml/s", size_hint_x=None, width=150)
-            save_btn.bind(on_release=partial(self.save_calibration, pump["id"], measure_input))
+            auto_10s_btn = Button(text="Run 10s", size_hint_x=None, width=120)
+            auto_10s_btn.bind(on_release=partial(self.run_ten_seconds, pump["id"]))
 
-            row.add_widget(info)
-            row.add_widget(prime_btn)
-            row.add_widget(measure_input)
-            row.add_widget(save_btn)
-            container.add_widget(row)
+            hold_btn = Button(text="Hold for Manual", size_hint_x=None, width=180)
+            hold_btn.bind(on_press=partial(self.manual_start, pump["id"]))
+            hold_btn.bind(on_release=partial(self.manual_stop, pump["id"]))
+            self._manual_buttons[pump["id"]] = hold_btn
+
+            manual_save_btn = Button(text="Save 100ml", size_hint_x=None, width=120)
+            manual_save_btn.bind(on_release=partial(self.save_manual_100ml, pump["id"]))
+
+            controls.add_widget(prime_btn)
+            controls.add_widget(auto_10s_btn)
+            controls.add_widget(hold_btn)
+            controls.add_widget(manual_save_btn)
+
+            measure_row = BoxLayout(size_hint_y=None, height=70, spacing=8)
+            measure_input = TextInput(hint_text="ml measured in 10s", multiline=False, input_filter="float")
+            save_btn = Button(text="Save from 10s", size_hint_x=None, width=170)
+            save_btn.bind(on_release=partial(self.save_calibration, pump["id"], measure_input))
+            measure_row.add_widget(measure_input)
+            measure_row.add_widget(save_btn)
+
+            status = Label(
+                text="Manual 100ml: not measured yet",
+                halign="left",
+                valign="middle",
+                size_hint_y=None,
+                height=32,
+            )
+            status.bind(size=lambda inst, _: setattr(inst, "text_size", inst.size))
+            status_id = f"manual_status_{pump['id']}"
+            setattr(self, status_id, status)
+
+            panel.add_widget(info)
+            panel.add_widget(controls)
+            panel.add_widget(measure_row)
+            panel.add_widget(status)
+            container.add_widget(panel)
+
+    def _status_label(self, pump_id: int) -> Label:
+        return getattr(self, f"manual_status_{pump_id}")
 
     def prime(self, pump_id: int, *_):
         app = self.manager.app
         app.pour_manager.stop()
 
-        def do_prime(_dt):
-            try:
-                app.pump_driver.start(pump_id)
-                Clock.schedule_once(lambda *_: app.pump_driver.stop(pump_id), 2)
-            except Exception as exc:
-                app.show_error(f"Prime failed: {exc}")
+        try:
+            app.pump_driver.start(pump_id)
+            Clock.schedule_once(lambda *_: app.pump_driver.stop(pump_id), 2)
+        except Exception as exc:
+            app.show_error(f"Prime failed: {exc}")
 
-        Clock.schedule_once(do_prime, 0)
+    def run_ten_seconds(self, pump_id: int, *_):
+        app = self.manager.app
+        app.pour_manager.stop()
+        status = self._status_label(pump_id)
+        status.text = "Auto run: pumping for 10 seconds..."
+        try:
+            app.pump_driver.start(pump_id)
+            Clock.schedule_once(lambda *_: self._finish_ten_seconds(pump_id), 10)
+        except Exception as exc:
+            app.show_error(f"10s calibration failed: {exc}")
+
+    def _finish_ten_seconds(self, pump_id: int):
+        self.manager.app.pump_driver.stop(pump_id)
+        status = self._status_label(pump_id)
+        status.text = "Auto run complete: measure ml dispensed and use 'Save from 10s'."
+
+    def manual_start(self, pump_id: int, *_):
+        app = self.manager.app
+        app.pour_manager.stop()
+        self._manual_started_at[pump_id] = monotonic()
+        btn = self._manual_buttons.get(pump_id)
+        if btn:
+            btn.text = "Release to Stop"
+        status = self._status_label(pump_id)
+        status.text = "Manual run: pumping... release button at 100ml."
+        try:
+            app.pump_driver.start(pump_id)
+        except Exception as exc:
+            app.show_error(f"Manual calibration start failed: {exc}")
+
+    def manual_stop(self, pump_id: int, *_):
+        app = self.manager.app
+        start = self._manual_started_at.pop(pump_id, None)
+        app.pump_driver.stop(pump_id)
+
+        btn = self._manual_buttons.get(pump_id)
+        if btn:
+            btn.text = "Hold for Manual"
+
+        if start is None:
+            return
+
+        elapsed = max(monotonic() - start, 0.01)
+        self._manual_elapsed_s[pump_id] = elapsed
+        ml_per_sec = 100.0 / elapsed
+        status = self._status_label(pump_id)
+        status.text = f"Manual 100ml time: {elapsed:.2f}s (est {ml_per_sec:.2f} ml/s). Tap Save 100ml."
+
+    def save_manual_100ml(self, pump_id: int, *_):
+        elapsed = self._manual_elapsed_s.get(pump_id)
+        if not elapsed:
+            self._status_label(pump_id).text = "No manual run recorded yet for this pump."
+            return
+
+        ml_per_sec = 100.0 / elapsed
+        self.manager.app.pump_store.set_ml_per_sec(pump_id, ml_per_sec)
+        self._status_label(pump_id).text = f"Saved manual calibration: {ml_per_sec:.2f} ml/s"
+        self.refresh()
 
     def save_calibration(self, pump_id: int, measure_input: TextInput, *_):
         text = measure_input.text.strip()
@@ -225,6 +325,7 @@ class CalibrationScreen(Screen):
         ml_in_10s = float(text)
         ml_per_sec = ml_in_10s / 10.0
         self.manager.app.pump_store.set_ml_per_sec(pump_id, ml_per_sec)
+        self._status_label(pump_id).text = f"Saved 10s calibration: {ml_per_sec:.2f} ml/s"
         self.refresh()
 
 

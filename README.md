@@ -59,9 +59,10 @@ python3 main.py
 ## Calibration workflow
 1. Go to **Settings** -> **Open Calibration**.
 2. For each pump, tap **Prime 2s** to fill tube.
-3. Run pump manually for 10 seconds and measure dispensed ml.
-4. Enter measured ml in the field and tap **Save ml/s**.
-   - App stores `ml_per_sec = measured_ml / 10`.
+3. Use one of two methods:
+   - **Run 10s**: pump runs automatically for 10 seconds, then enter measured ml and tap **Save from 10s**.
+   - **Hold for Manual**: press and hold while liquid fills your measuring cup to 100 ml, then release and tap **Save 100ml**.
+4. Saved calibration writes `ml_per_sec` into `data/pumps.json`, so values persist after reboot/app restart.
 
 ## Safety behavior
 - App initializes with all pumps OFF.
