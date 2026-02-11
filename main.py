@@ -56,13 +56,21 @@ class CocktailBotApp(App):
                 pass
 
     def refresh_home(self):
-        self.sm.get_screen("home").refresh()
+        if not hasattr(self, "sm"):
+            return
+        home = self.sm.get_screen("home")
+        if home:
+            home.refresh()
 
     def go_home(self):
+        if not hasattr(self, "sm"):
+            return
         self.sm.current = "home"
         self.refresh_home()
 
     def go_settings(self):
+        if not hasattr(self, "sm"):
+            return
         self.sm.current = "settings"
 
     def show_calibration(self):
