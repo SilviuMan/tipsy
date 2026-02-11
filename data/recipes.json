@@ -3,7 +3,7 @@
     {
       "id": "whisky_cola",
       "name": "Whisky Cola",
-      "image": "assets/cocktails/whisky_cola.png",
+      "image": "atlas://data/images/defaulttheme/button",
       "steps": [
         {"ingredient": "whisky", "ml": 50},
         {"ingredient": "cola", "ml": 150}
@@ -12,7 +12,7 @@
     {
       "id": "vodka_sprite",
       "name": "Vodka Sprite",
-      "image": "assets/cocktails/vodka_sprite.png",
+      "image": "atlas://data/images/defaulttheme/button",
       "steps": [
         {"ingredient": "vodka", "ml": 50},
         {"ingredient": "sprite", "ml": 150}
@@ -21,7 +21,7 @@
     {
       "id": "gin_tonic",
       "name": "Gin Tonic",
-      "image": "assets/cocktails/gin_tonic.png",
+      "image": "atlas://data/images/defaulttheme/button",
       "steps": [
         {"ingredient": "gin", "ml": 50},
         {"ingredient": "tonic", "ml": 150}

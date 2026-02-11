@@ -68,9 +68,3 @@ python3 main.py
 - STOP immediately calls `stop_all()` and aborts recipe.
 - Any pour exception triggers watchdog stop and an error popup.
 - App stops all pumps on shutdown/exit.
-
-
-## Media sources
-- Cocktail images are loaded from local files in `assets/cocktails/` (for example `assets/cocktails/whisky_cola.png`).
-- Header icons are loaded from local files in `assets/icons/` (`home.png`, `settings.png`).
-- If an image file is missing, the app falls back to a built-in Kivy atlas image.

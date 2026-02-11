@@ -11,29 +11,17 @@
         Rectangle:
             pos: self.pos
             size: self.size
-    BoxLayout:
-        spacing: dp(6)
-        AsyncImage:
-            source: root.home_icon_url
-            size_hint_x: None
-            width: dp(32)
-        Button:
-            text: "Home"
-            disabled: root.home_disabled
-            on_release: app.go_home()
+    Button:
+        text: "Home"
+        disabled: root.home_disabled
+        on_release: app.go_home()
     Label:
         text: "CocktailBot"
         font_size: '28sp'
-    BoxLayout:
-        spacing: dp(6)
-        Button:
-            text: "Settings"
-            disabled: root.settings_disabled
-            on_release: app.go_settings()
-        AsyncImage:
-            source: root.settings_icon_url
-            size_hint_x: None
-            width: dp(32)
+    Button:
+        text: "Settings"
+        disabled: root.settings_disabled
+        on_release: app.go_settings()
 
 <CocktailCard>:
     orientation: 'vertical'

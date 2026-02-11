@@ -1,5 +1,4 @@
 from functools import partial
-from pathlib import Path
 from typing import List, Optional
 
 from kivy.clock import Clock
@@ -19,8 +18,6 @@ from core.availability import sort_recipes_by_availability
 class HeaderBar(BoxLayout):
     home_disabled = BooleanProperty(False)
     settings_disabled = BooleanProperty(False)
-    home_icon_url = StringProperty("assets/icons/home.png")
-    settings_icon_url = StringProperty("assets/icons/settings.png")
 
 
 class CocktailCard(BoxLayout):
@@ -47,7 +44,7 @@ class HomeScreen(Screen):
             {
                 "id": r[0]["id"],
                 "name": r[0]["name"],
-                "image": self.resolve_image_source(r[0].get("image")),
+                "image": r[0].get("image", "atlas://data/images/defaulttheme/button"),
                 "available": r[1],
             }
             for r in recipes
@@ -65,16 +62,6 @@ class HomeScreen(Screen):
         if self.recipes_ui:
             carousel.index = 0
             self.select_by_index(0)
-
-    def resolve_image_source(self, image_source: Optional[str]) -> str:
-        fallback = "atlas://data/images/defaulttheme/button"
-        if not image_source:
-            return fallback
-
-        if image_source.startswith(("atlas://", "http://", "https://")):
-            return image_source
-
-        return image_source if Path(image_source).exists() else fallback
 
     def select_by_index(self, idx: int):
         if idx < 0 or idx >= len(self.recipes_ui):
