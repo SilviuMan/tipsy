@@ -1,0 +1,175 @@
+{
+  "cocktails": [
+    {
+      "id": "whisky_cola",
+      "name": "Whisky Cola",
+      "image": "assets/cocktails/whisky_cola.png",
+      "steps": [
+        { "ingredient": "whisky", "ml": 50 },
+        { "ingredient": "cola", "ml": 200 }
+      ]
+    },
+    {
+      "id": "rum_cola",
+      "name": "Rum Cola",
+      "image": "assets/cocktails/rum_cola.png",
+      "steps": [
+        { "ingredient": "white_rum", "ml": 50 },
+        { "ingredient": "cola", "ml": 200 }
+      ]
+    },
+    {
+      "id": "vodka_cola",
+      "name": "Vodka Cola",
+      "image": "assets/cocktails/vodka_cola.png",
+      "steps": [
+        { "ingredient": "vodka", "ml": 50 },
+        { "ingredient": "cola", "ml": 200 }
+      ]
+    },
+    {
+      "id": "scotch_soda",
+      "name": "Scotch & Soda",
+      "image": "assets/cocktails/scotch_soda.png",
+      "steps": [
+        { "ingredient": "whisky", "ml": 60 },
+        { "ingredient": "mineral_water", "ml": 150 }
+      ]
+    },
+    {
+      "id": "vodka_soda",
+      "name": "Vodka Soda",
+      "image": "assets/cocktails/vodka_soda.png",
+      "steps": [
+        { "ingredient": "vodka", "ml": 50 },
+        { "ingredient": "lemon_juice", "ml": 10 },
+        { "ingredient": "mineral_water", "ml": 170 }
+      ]
+    },
+    {
+      "id": "gin_soda",
+      "name": "Gin Soda",
+      "image": "assets/cocktails/gin_soda.png",
+      "steps": [
+        { "ingredient": "gin", "ml": 50 },
+        { "ingredient": "lemon_juice", "ml": 10 },
+        { "ingredient": "mineral_water", "ml": 170 }
+      ]
+    },
+    {
+      "id": "screwdriver",
+      "name": "Screwdriver",
+      "image": "assets/cocktails/screwdriver.png",
+      "steps": [
+        { "ingredient": "vodka", "ml": 50 },
+        { "ingredient": "orange_juice", "ml": 200 }
+      ]
+    },
+    {
+      "id": "whisky_orange",
+      "name": "Whisky Orange",
+      "image": "assets/cocktails/whisky_orange.png",
+      "steps": [
+        { "ingredient": "whisky", "ml": 50 },
+        { "ingredient": "orange_juice", "ml": 200 }
+      ]
+    },
+    {
+      "id": "vodka_cranberry",
+      "name": "Vodka Cranberry",
+      "image": "assets/cocktails/vodka_cranberry.png",
+      "steps": [
+        { "ingredient": "vodka", "ml": 50 },
+        { "ingredient": "lemon_juice", "ml": 10 },
+        { "ingredient": "cranberry_juice", "ml": 190 }
+      ]
+    },
+    {
+      "id": "gin_cranberry",
+      "name": "Gin Cranberry",
+      "image": "assets/cocktails/gin_cranberry.png",
+      "steps": [
+        { "ingredient": "gin", "ml": 50 },
+        { "ingredient": "lemon_juice", "ml": 10 },
+        { "ingredient": "cranberry_juice", "ml": 190 }
+      ]
+    },
+    {
+      "id": "rum_orange",
+      "name": "Rum Orange",
+      "image": "assets/cocktails/rum_orange.png",
+      "steps": [
+        { "ingredient": "white_rum", "ml": 50 },
+        { "ingredient": "orange_juice", "ml": 200 }
+      ]
+    },
+    {
+      "id": "madras",
+      "name": "Madras",
+      "image": "assets/cocktails/madras.png",
+      "steps": [
+        { "ingredient": "vodka", "ml": 50 },
+        { "ingredient": "cranberry_juice", "ml": 120 },
+        { "ingredient": "orange_juice", "ml": 120 }
+      ]
+    },
+    {
+      "id": "mimosa",
+      "name": "Mimosa",
+      "image": "assets/cocktails/mimosa.png",
+      "steps": [
+        { "ingredient": "orange_juice", "ml": 120 },
+        { "ingredient": "champagne", "ml": 120 }
+      ]
+    },
+    {
+      "id": "bucks_fizz",
+      "name": "Buck's Fizz",
+      "image": "assets/cocktails/bucks_fizz.png",
+      "steps": [
+        { "ingredient": "orange_juice", "ml": 90 },
+        { "ingredient": "champagne", "ml": 150 }
+      ]
+    },
+    {
+      "id": "poinsettia",
+      "name": "Poinsettia",
+      "image": "assets/cocktails/poinsettia.png",
+      "steps": [
+        { "ingredient": "cranberry_juice", "ml": 90 },
+        { "ingredient": "orange_juice", "ml": 30 },
+        { "ingredient": "champagne", "ml": 120 }
+      ]
+    },
+    {
+      "id": "vodka_cran_spritz",
+      "name": "Vodka Cranberry Spritz",
+      "image": "assets/cocktails/vodka_cran_spritz.png",
+      "steps": [
+        { "ingredient": "vodka", "ml": 40 },
+        { "ingredient": "cranberry_juice", "ml": 120 },
+        { "ingredient": "champagne", "ml": 90 }
+      ]
+    },
+    {
+      "id": "gin_lemon_spritz",
+      "name": "Gin Lemon Spritz",
+      "image": "assets/cocktails/gin_lemon_spritz.png",
+      "steps": [
+        { "ingredient": "gin", "ml": 50 },
+        { "ingredient": "lemon_juice", "ml": 20 },
+        { "ingredient": "mineral_water", "ml": 130 }
+      ]
+    },
+    {
+      "id": "vodka_lemon_spritz",
+      "name": "Vodka Lemon Spritz",
+      "image": "assets/cocktails/vodka_lemon_spritz.png",
+      "steps": [
+        { "ingredient": "vodka", "ml": 50 },
+        { "ingredient": "lemon_juice", "ml": 20 },
+        { "ingredient": "mineral_water", "ml": 130 }
+      ]
+    }
+  ]
+}

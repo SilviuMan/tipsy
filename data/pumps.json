@@ -1,0 +1,14 @@
+{
+  "pumps": [
+    {"id": 1, "gpio": 5, "ingredient": null, "ml_per_sec": 10.0},
+    {"id": 2, "gpio": 6, "ingredient": null, "ml_per_sec": 10.0},
+    {"id": 3, "gpio": 13, "ingredient": null, "ml_per_sec": 10.0},
+    {"id": 4, "gpio": 19, "ingredient": null, "ml_per_sec": 10.0},
+    {"id": 5, "gpio": 26, "ingredient": null, "ml_per_sec": 10.0},
+    {"id": 6, "gpio": 16, "ingredient": null, "ml_per_sec": 10.0},
+    {"id": 7, "gpio": 20, "ingredient": null, "ml_per_sec": 10.0},
+    {"id": 8, "gpio": 21, "ingredient": null, "ml_per_sec": 10.0},
+    {"id": 9, "gpio": 12, "ingredient": null, "ml_per_sec": 10.0},
+    {"id": 10, "gpio": 25, "ingredient": null, "ml_per_sec": 10.0}
+  ]
+}
