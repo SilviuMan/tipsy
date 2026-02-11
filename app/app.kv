@@ -1,0 +1,247 @@
+#:import dp kivy.metrics.dp
+
+<HeaderBar>:
+    size_hint_y: None
+    height: dp(90)
+    spacing: dp(8)
+    padding: dp(12)
+    canvas.before:
+        Color:
+            rgba: 0.12, 0.12, 0.12, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    BoxLayout:
+        spacing: dp(6)
+        AsyncImage:
+            source: root.home_icon_url
+            size_hint_x: None
+            width: dp(32)
+        Button:
+            text: "Home"
+            disabled: root.home_disabled
+            on_release: app.go_home()
+    Label:
+        text: "CocktailBot"
+        font_size: '28sp'
+    BoxLayout:
+        spacing: dp(6)
+        Button:
+            text: "Settings"
+            disabled: root.settings_disabled
+            on_release: app.go_settings()
+        AsyncImage:
+            source: root.settings_icon_url
+            size_hint_x: None
+            width: dp(32)
+
+<CocktailCard>:
+    orientation: 'vertical'
+    padding: dp(20)
+    spacing: dp(10)
+    canvas.before:
+        Color:
+            rgba: (0.2, 0.2, 0.2, 1) if root.available else (0.15, 0.15, 0.15, 1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [20,]
+    AsyncImage:
+        source: root.image_path if root.image_path else 'atlas://data/images/defaulttheme/button'
+        allow_stretch: True
+        keep_ratio: True
+        color: (1, 1, 1, 1) if root.available else (0.4, 0.4, 0.4, 1)
+    Label:
+        text: root.recipe_name
+        size_hint_y: None
+        height: dp(40)
+    Label:
+        text: "Unavailable" if not root.available else "Available"
+        size_hint_y: None
+        height: dp(30)
+        color: (1, 0.2, 0.2, 1) if not root.available else (0.2, 1, 0.2, 1)
+
+<HomeScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        canvas.before:
+            Color:
+                rgba: 0, 0, 0, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+            Color:
+                rgba: 0.08, 0.08, 0.1, 1
+            Ellipse:
+                pos: (self.center_x - min(self.width, self.height) * 0.48, self.center_y - min(self.width, self.height) * 0.48)
+                size: (min(self.width, self.height) * 0.96, min(self.width, self.height) * 0.96)
+        Widget:
+            size_hint_y: None
+            height: dp(24)
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None
+            width: min(root.width, root.height) * 0.9
+            height: min(root.width, root.height) * 0.9
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            HeaderBar:
+            Label:
+                text: root.selected_recipe_name
+                size_hint_y: None
+                height: dp(90)
+                font_size: '42sp'
+            Carousel:
+                id: cocktail_carousel
+                loop: False
+                on_index: root.on_carousel_index(self.index)
+            Button:
+                text: "Prepare Cocktail"
+                size_hint_y: None
+                height: dp(100)
+                font_size: '32sp'
+                disabled: not root.selected_available
+                on_release: root.prepare_selected()
+
+<SettingsScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        canvas.before:
+            Color:
+                rgba: 0, 0, 0, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+            Color:
+                rgba: 0.08, 0.08, 0.1, 1
+            Ellipse:
+                pos: (self.center_x - min(self.width, self.height) * 0.48, self.center_y - min(self.width, self.height) * 0.48)
+                size: (min(self.width, self.height) * 0.96, min(self.width, self.height) * 0.96)
+        Widget:
+            size_hint_y: None
+            height: dp(24)
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None
+            width: min(root.width, root.height) * 0.9
+            height: min(root.width, root.height) * 0.9
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            HeaderBar:
+            ScrollView:
+                do_scroll_x: False
+                BoxLayout:
+                    id: pump_list
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    spacing: dp(8)
+                    padding: dp(8)
+                    height: self.minimum_height
+
+<CalibrationScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        canvas.before:
+            Color:
+                rgba: 0, 0, 0, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+            Color:
+                rgba: 0.08, 0.08, 0.1, 1
+            Ellipse:
+                pos: (self.center_x - min(self.width, self.height) * 0.48, self.center_y - min(self.width, self.height) * 0.48)
+                size: (min(self.width, self.height) * 0.96, min(self.width, self.height) * 0.96)
+        Widget:
+            size_hint_y: None
+            height: dp(24)
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None
+            width: min(root.width, root.height) * 0.9
+            height: min(root.width, root.height) * 0.9
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            HeaderBar:
+            ScrollView:
+                do_scroll_x: False
+                BoxLayout:
+                    id: calibration_list
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    spacing: dp(8)
+                    padding: dp(8)
+                    height: self.minimum_height
+
+<PouringScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        canvas.before:
+            Color:
+                rgba: 0, 0, 0, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+            Color:
+                rgba: 0.08, 0.08, 0.1, 1
+            Ellipse:
+                pos: (self.center_x - min(self.width, self.height) * 0.48, self.center_y - min(self.width, self.height) * 0.48)
+                size: (min(self.width, self.height) * 0.96, min(self.width, self.height) * 0.96)
+        Widget:
+            size_hint_y: None
+            height: dp(24)
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None
+            width: min(root.width, root.height) * 0.9
+            height: min(root.width, root.height) * 0.9
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            HeaderBar:
+                home_disabled: True
+                settings_disabled: True
+            Label:
+                text: root.status_text
+                font_size: '36sp'
+            Label:
+                text: root.progress_text
+                font_size: '28sp'
+            Button:
+                text: "STOP"
+                size_hint_y: None
+                height: dp(120)
+                background_color: 1, 0.1, 0.1, 1
+                font_size: '40sp'
+                on_release: root.confirm_stop()
+
+<DoneScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        canvas.before:
+            Color:
+                rgba: 0, 0, 0, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+            Color:
+                rgba: 0.08, 0.08, 0.1, 1
+            Ellipse:
+                pos: (self.center_x - min(self.width, self.height) * 0.48, self.center_y - min(self.width, self.height) * 0.48)
+                size: (min(self.width, self.height) * 0.96, min(self.width, self.height) * 0.96)
+        Widget:
+            size_hint_y: None
+            height: dp(24)
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint: None, None
+            width: min(root.width, root.height) * 0.9
+            height: min(root.width, root.height) * 0.9
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            HeaderBar:
+            Label:
+                text: "✓"
+                font_size: '120sp'
+            Label:
+                text: "Cocktail done"
+                font_size: '44sp'
+            Button:
+                text: "Go Home"
+                size_hint_y: None
+                height: dp(100)
+                on_release: app.go_home()
