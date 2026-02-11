@@ -3,7 +3,7 @@
     {
       "id": "whisky_cola",
       "name": "Whisky Cola",
-      "image": "https://upload.wikimedia.org/wikipedia/commons/3/34/Jack_and_coke.jpg",
+      "image": "assets/cocktails/whisky_cola.png",
       "steps": [
         {"ingredient": "whisky", "ml": 50},
         {"ingredient": "cola", "ml": 150}
@@ -12,7 +12,7 @@
     {
       "id": "vodka_sprite",
       "name": "Vodka Sprite",
-      "image": "https://upload.wikimedia.org/wikipedia/commons/7/71/Vodka_collins.jpg",
+      "image": "assets/cocktails/vodka_sprite.png",
       "steps": [
         {"ingredient": "vodka", "ml": 50},
         {"ingredient": "sprite", "ml": 150}
@@ -21,7 +21,7 @@
     {
       "id": "gin_tonic",
       "name": "Gin Tonic",
-      "image": "https://upload.wikimedia.org/wikipedia/commons/e/e4/Gin_and_tonic_with_lime.jpg",
+      "image": "assets/cocktails/gin_tonic.png",
       "steps": [
         {"ingredient": "gin", "ml": 50},
         {"ingredient": "tonic", "ml": 150}

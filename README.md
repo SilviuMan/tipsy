@@ -71,4 +71,6 @@ python3 main.py
 
 
 ## Media sources
-- Recipe card photos and header icons are loaded from internet-hosted image URLs at runtime (no binary media files committed).
+- Cocktail images are loaded from local files in `assets/cocktails/` (for example `assets/cocktails/whisky_cola.png`).
+- Header icons are loaded from local files in `assets/icons/` (`home.png`, `settings.png`).
+- If an image file is missing, the app falls back to a built-in Kivy atlas image.
