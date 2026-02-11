@@ -1,99 +1,70 @@
-# CocktailBot (Raspberry Pi 4 + Waveshare 5" 1080×1080 Round Touch)
+# CocktailBot (Raspberry Pi + Kivy)
 
-Touch UI cocktail maker that:
-- Shows a carousel of cocktails
-- Enables only cocktails whose required ingredients are mapped to pumps
-- Runs pumps sequentially (one at a time) by timed pours
-- Has a big red STOP button to immediately stop all pumps
+CocktailBot is a 1080x1080 touch UI for a round display and 10 peristaltic pumps.
 
-## Hardware
-- Raspberry Pi 4
-- Waveshare 5inch 1080×1080 LCD (HDMI + USB touch)
-- 10x Peristaltic pumps (6V)
-- 10x F5305S MOSFET PWM switch modules (one per pump)
-- 6V pump power supply (separate from Raspberry Pi power)
-- (Recommended) Flyback diode per pump + bulk capacitor on 6V rail
+## Features
+- Kivy touchscreen UI with circular-safe layout and black corner masking.
+- Home, Settings, Calibration, Pouring, and Done screens.
+- Recipe availability detection based on assigned ingredients.
+- One-pump-at-a-time sequential pouring (safety-focused).
+- Immediate STOP with pump shutdown event.
+- Watchdog error handling in pour manager (`stop_all()` on exception).
+- Pump calibration utility (prime 2s + ml/s calculation from 10-second measurement).
 
-## Display setup (Waveshare 1080×1080)
-Edit `/boot/config.txt` and add:
+## GPIO mapping (BCM)
+- Pump 1 -> GPIO5
+- Pump 2 -> GPIO6
+- Pump 3 -> GPIO13
+- Pump 4 -> GPIO19
+- Pump 5 -> GPIO26
+- Pump 6 -> GPIO16
+- Pump 7 -> GPIO20
+- Pump 8 -> GPIO21
+- Pump 9 -> GPIO12
+- Pump 10 -> GPIO25
 
-hdmi_group=2
-hdmi_mode=87
-hdmi_pixel_freq_limit=356000000
-hdmi_timings=1080 0 68 32 100 1080 0 12 4 16 0 0 0 60 0 85500000 0
+Each GPIO drives an opto-isolated F5305S MOSFET module. Pump ON means GPIO HIGH.
 
-Connect:
-- HDMI -> display
-- USB (touch) -> Raspberry Pi USB
-- Power display via 5V Type-C
+## Wiring
+1. Power each pump from an external pump PSU according to your MOSFET board specs.
+2. Common ground between Raspberry Pi GND and MOSFET control GND.
+3. Connect each BCM pin listed above to the corresponding MOSFET input.
+4. Use flyback-safe wiring and fusing appropriate for your pump current.
 
-## Pump wiring (F5305S module)
-Each pump uses one MOSFET switch module.
-
-Load/pump side:
-- Pump PSU +6V -> DC+
-- Pump PSU GND -> DC-
-- Pump + -> OUT+
-- Pump - -> OUT-
-
-Control side:
-- Pi GPIO -> IN+
-- Pi GND -> IN-
-
-Recommended:
-- Flyback diode across each pump motor (stripe to pump +)
-
-## GPIO mapping (BCM numbering)
-Pump 1: GPIO5  (Pin 29)
-Pump 2: GPIO6  (Pin 31)
-Pump 3: GPIO13 (Pin 33)
-Pump 4: GPIO19 (Pin 35)
-Pump 5: GPIO26 (Pin 37)
-Pump 6: GPIO16 (Pin 36)
-Pump 7: GPIO20 (Pin 38)
-Pump 8: GPIO21 (Pin 40)
-Pump 9: GPIO12 (Pin 32)
-Pump10: GPIO25 (Pin 22)
-
-## Install (Raspberry Pi OS Desktop)
+## Install
+```bash
 sudo apt update
-sudo apt install -y python3-venv python3-pip git \
-  libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
+sudo apt install -y python3-pip python3-kivy xserver-xorg x11-xserver-utils
+pip3 install gpiozero
+```
 
-mkdir -p ~/cocktailbot
-cd ~/cocktailbot
-python3 -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip wheel setuptools
-pip install kivy gpiozero pillow
+## Prevent screen blanking (required for kiosk mode)
+Run once at session start (or autostart script):
+```bash
+xset s off
+xset -dpms
+xset s noblank
+```
+The app also attempts these commands on startup.
 
 ## Run
-source ~/cocktailbot/.venv/bin/activate
-python ~/cocktailbot/main.py
+```bash
+python3 main.py
+```
 
-## Configuration
-### Recipes
-Recipes are stored in `data/recipes.json`:
-- name
-- image path (fallback image used if missing)
-- steps: ingredient + ml
+## Data files
+- `data/recipes.json` - cocktail definitions and ml steps.
+- `data/pumps.json` - 10 pump GPIO, ingredient assignment, and `ml_per_sec`.
 
-### Pump config
-`data/pumps.json`:
-- pump id
-- gpio (BCM)
-- ingredient assigned
-- ml_per_sec (calibration value)
+## Calibration workflow
+1. Go to **Settings** -> **Open Calibration**.
+2. For each pump, tap **Prime 2s** to fill tube.
+3. Run pump manually for 10 seconds and measure dispensed ml.
+4. Enter measured ml in the field and tap **Save ml/s**.
+   - App stores `ml_per_sec = measured_ml / 10`.
 
-## Calibration
-You MUST calibrate ml_per_sec per pump:
-- Put tube into measuring cylinder
-- Run pump for 10 seconds
-- Measure ml output
-- ml_per_sec = ml / 10
-Save into pumps.json
-
-## Safety
-- App forces all pumps OFF at startup and on exit
-- STOP button immediately stops all pumps and aborts recipe
-- Only one pump runs at a time by design
+## Safety behavior
+- App initializes with all pumps OFF.
+- STOP immediately calls `stop_all()` and aborts recipe.
+- Any pour exception triggers watchdog stop and an error popup.
+- App stops all pumps on shutdown/exit.
