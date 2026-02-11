@@ -31,12 +31,77 @@ Each GPIO drives an opto-isolated F5305S MOSFET module. Pump ON means GPIO HIGH.
 3. Connect each BCM pin listed above to the corresponding MOSFET input.
 4. Use flyback-safe wiring and fusing appropriate for your pump current.
 
-## Install
+## Install Python and project packages (Raspberry Pi)
+
+### 1) Install Python + system packages
 ```bash
 sudo apt update
-sudo apt install -y python3-pip python3-kivy xserver-xorg x11-xserver-utils
-pip3 install gpiozero
+sudo apt install -y \
+  python3 python3-pip python3-venv python3-kivy \
+  xserver-xorg x11-xserver-utils
 ```
+
+### 2) Create a virtual environment (recommended)
+Run these commands from the project folder (`/workspace/tipsy` or your clone path):
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install gpiozero
+```
+
+### 3) Start the app
+```bash
+source .venv/bin/activate
+python main.py
+```
+
+If you do not want a virtual environment, install directly with:
+```bash
+pip3 install --user gpiozero
+```
+
+## Make a clickable executable
+
+You have two practical options on Raspberry Pi.
+
+### Option A (recommended): Desktop launcher that runs the app
+Create a launcher script:
+```bash
+cat > ~/Desktop/run-cocktailbot.sh << 'EOF'
+#!/usr/bin/env bash
+cd /workspace/tipsy
+source .venv/bin/activate
+python main.py
+EOF
+chmod +x ~/Desktop/run-cocktailbot.sh
+```
+
+Create a clickable desktop icon:
+```bash
+cat > ~/Desktop/CocktailBot.desktop << 'EOF'
+[Desktop Entry]
+Type=Application
+Name=CocktailBot
+Comment=Start CocktailBot
+Exec=/home/pi/Desktop/run-cocktailbot.sh
+Terminal=false
+Path=/workspace/tipsy
+Icon=utilities-terminal
+EOF
+chmod +x ~/Desktop/CocktailBot.desktop
+```
+
+> If your username is not `pi`, change `/home/pi/...` in `Exec=` to your home path.
+
+### Option B: Build a single-file binary with PyInstaller
+```bash
+source .venv/bin/activate
+pip install pyinstaller
+pyinstaller --onefile --name cocktailbot main.py
+```
+
+Binary output will be in `dist/cocktailbot`.
 
 ## Prevent screen blanking (required for kiosk mode)
 Run once at session start (or autostart script):
