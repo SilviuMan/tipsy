@@ -17,6 +17,7 @@ from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.screenmanager import Screen
 from kivy.uix.textinput import TextInput
 from kivy.metrics import dp
+from kivy.graphics import Color, RoundedRectangle
 
 from core.availability import sort_recipes_by_availability
 
@@ -155,16 +156,28 @@ class IngredientPickerPopup(Popup):
         self.size_hint = (0.75, 0.75)
         self.pos_hint = {"center_x": 0.5, "center_y": 0.5}
         self.auto_dismiss = False
+        self.title_color = (1, 1, 1, 1)
+        self.separator_color = (0.23, 0.33, 0.54, 1)
+        self.background_color = (0.04, 0.05, 0.08, 0.98)
         self.on_pick = on_pick
         self.ingredients = sorted(ingredients)
 
         root = BoxLayout(orientation="vertical", spacing=dp(8), padding=dp(10))
+        with root.canvas.before:
+            Color(0.08, 0.1, 0.16, 1)
+            self._bg_rect = RoundedRectangle(pos=root.pos, size=root.size, radius=[dp(14)])
+        root.bind(pos=self._sync_popup_bg, size=self._sync_popup_bg)
 
         self.search = TextInput(
             hint_text="Search ingredient",
             multiline=False,
             size_hint_y=None,
             height=dp(52),
+            foreground_color=(1, 1, 1, 1),
+            hint_text_color=(0.72, 0.77, 0.88, 1),
+            background_color=(0.15, 0.18, 0.28, 1),
+            cursor_color=(1, 1, 1, 1),
+            selection_color=(0.27, 0.47, 0.85, 0.45),
         )
         self.search.bind(text=lambda *_: self.render_list())
         root.add_widget(self.search)
@@ -186,8 +199,14 @@ class IngredientPickerPopup(Popup):
 
         actions = BoxLayout(size_hint_y=None, height=dp(58), spacing=dp(8))
         clear_btn = Button(text="Clear")
+        clear_btn.color = (1, 1, 1, 1)
+        clear_btn.background_normal = ""
+        clear_btn.background_color = (0.2, 0.24, 0.35, 1)
         clear_btn.bind(on_release=lambda *_: self.pick(None))
         close_btn = Button(text="Close")
+        close_btn.color = (1, 1, 1, 1)
+        close_btn.background_normal = ""
+        close_btn.background_color = (0.25, 0.3, 0.44, 1)
         close_btn.bind(on_release=lambda *_: self.dismiss())
         actions.add_widget(clear_btn)
         actions.add_widget(close_btn)
@@ -195,6 +214,10 @@ class IngredientPickerPopup(Popup):
 
         self.content = root
         self.render_list()
+
+    def _sync_popup_bg(self, widget, *_):
+        self._bg_rect.pos = widget.pos
+        self._bg_rect.size = widget.size
 
     def render_list(self):
         term = self.search.text.lower().strip()
