@@ -32,8 +32,29 @@ class RecipeStore:
     def get_all_ingredients(self) -> Set[str]:
         ingredients: Set[str] = set()
         for recipe in self._recipes:
-            for step in recipe.get("steps", []):
-                ingredient = step.get("ingredient")
+            for ingredient in self._iter_recipe_ingredients(recipe):
                 if ingredient:
                     ingredients.add(ingredient)
         return ingredients
+
+    def _iter_recipe_ingredients(self, recipe: Dict):
+        for step in recipe.get("steps", []):
+            ingredient = step.get("ingredient")
+            if ingredient:
+                yield ingredient
+
+        raw_ingredients = recipe.get("ingredients", [])
+        if isinstance(raw_ingredients, dict):
+            for ingredient in raw_ingredients.keys():
+                if ingredient:
+                    yield ingredient
+            return
+
+        if isinstance(raw_ingredients, list):
+            for item in raw_ingredients:
+                if isinstance(item, str) and item:
+                    yield item
+                elif isinstance(item, dict):
+                    ingredient = item.get("ingredient") or item.get("name")
+                    if ingredient:
+                        yield ingredient
