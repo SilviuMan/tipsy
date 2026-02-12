@@ -1,8 +1,11 @@
 import atexit
 import subprocess
+from pathlib import Path
 
 from kivy.config import Config
 
+Config.set("kivy", "keyboard_mode", "systemanddock")
+Config.set("kivy", "keyboard_layout", "qwerty")
 Config.set("graphics", "width", "1080")
 Config.set("graphics", "height", "1080")
 Config.set("graphics", "resizable", "0")
@@ -12,6 +15,7 @@ Config.set("graphics", "fullscreen", "1")
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.lang import Builder
+from kivy.resources import resource_add_path
 from kivy.uix.button import Button
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import ScreenManager
@@ -23,9 +27,15 @@ from hardware.pour_manager import PourManager
 from hardware.pump_driver import PumpDriver
 
 
+BASE_DIR = Path(__file__).resolve().parent
+
+
 class CocktailBotApp(App):
     def build(self):
         self.title = "CocktailBot"
+        self.base_dir = BASE_DIR
+        resource_add_path(str(self.base_dir))
+        resource_add_path(str(self.base_dir / "assets"))
         self.recipe_store = RecipeStore()
         self.pump_store = PumpStore()
         self.pump_driver = PumpDriver(self.pump_store.pump_id_to_gpio())
@@ -34,7 +44,7 @@ class CocktailBotApp(App):
         atexit.register(self.safe_shutdown)
         self.prevent_screen_sleep()
 
-        Builder.load_file("app/app.kv")
+        Builder.load_file(str(self.base_dir / "app" / "app.kv"))
 
         self.sm = ScreenManager()
         self.sm.app = self
