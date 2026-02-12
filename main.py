@@ -1,10 +1,38 @@
 import atexit
+import configparser
 import subprocess
 from pathlib import Path
 
+
+def sanitize_kivy_input_config():
+    """Remove duplicate hidinput probe entries that can double-dispatch touch events."""
+    config_path = Path.home() / ".kivy" / "config.ini"
+    if not config_path.exists():
+        return
+
+    parser = configparser.ConfigParser(strict=False)
+    parser.optionxform = str
+    parser.read(config_path)
+
+    if not parser.has_section("input"):
+        return
+
+    removed = False
+    for name, provider in list(parser.items("input")):
+        if provider.strip() == "probesysfs,provider=hidinput":
+            parser.remove_option("input", name)
+            removed = True
+
+    if removed:
+        with config_path.open("w", encoding="utf-8") as config_file:
+            parser.write(config_file)
+
+
+sanitize_kivy_input_config()
+
 from kivy.config import Config
 
-Config.set("kivy", "keyboard_mode", "systemanddock")
+Config.set("kivy", "keyboard_mode", "dock")
 Config.set("kivy", "keyboard_layout", "qwerty")
 Config.set("graphics", "width", "1080")
 Config.set("graphics", "height", "1080")

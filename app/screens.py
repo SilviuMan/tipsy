@@ -1,4 +1,3 @@
-from functools import partial
 from pathlib import Path
 from time import monotonic
 from typing import Dict, List, Optional
@@ -10,30 +9,15 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
-from kivy.uix.scrollview import ScrollView
+from kivy.uix.recycleview import RecycleView
+from kivy.uix.recycleboxlayout import RecycleBoxLayout
+from kivy.uix.recycleview.views import RecycleDataViewBehavior
+from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.screenmanager import Screen
 from kivy.uix.textinput import TextInput
 from kivy.metrics import dp
 
 from core.availability import sort_recipes_by_availability
-
-
-class ScrollFriendlyButton(Button):
-    drag_threshold = dp(12)
-
-    def on_touch_down(self, touch):
-        if self.collide_point(*touch.pos):
-            touch.ud[f"{id(self)}_down"] = touch.pos
-        return super().on_touch_down(touch)
-
-    def on_touch_move(self, touch):
-        key = f"{id(self)}_down"
-        if touch.grab_current is self and key in touch.ud:
-            start_x, start_y = touch.ud[key]
-            if abs(touch.x - start_x) > self.drag_threshold or abs(touch.y - start_y) > self.drag_threshold:
-                touch.ungrab(self)
-                return False
-        return super().on_touch_move(touch)
 
 
 class HeaderBar(BoxLayout):
@@ -134,6 +118,35 @@ class HomeScreen(Screen):
         app.start_pour(recipe)
 
 
+class IngredientRow(RecycleDataViewBehavior, ButtonBehavior, Label):
+    ingredient = StringProperty("")
+    popup = None
+    drag_threshold = dp(12)
+
+    def refresh_view_attrs(self, rv, index, data):
+        self.ingredient = data.get("ingredient", "")
+        self.text = self.ingredient
+        self.popup = data.get("popup")
+        return super().refresh_view_attrs(rv, index, data)
+
+    def on_touch_move(self, touch):
+        if touch.grab_current is self and "ingredient_row_touch_start" in touch.ud:
+            start_x, start_y = touch.ud["ingredient_row_touch_start"]
+            if abs(touch.x - start_x) > self.drag_threshold or abs(touch.y - start_y) > self.drag_threshold:
+                touch.ungrab(self)
+                return False
+        return Label.on_touch_move(self, touch)
+
+    def on_touch_down(self, touch):
+        if self.collide_point(*touch.pos):
+            touch.ud["ingredient_row_touch_start"] = touch.pos
+        return super().on_touch_down(touch)
+
+    def on_release(self):
+        if self.popup:
+            self.popup.pick(self.ingredient)
+
+
 class IngredientPickerPopup(Popup):
     def __init__(self, ingredients: List[str], on_pick, **kwargs):
         super().__init__(**kwargs)
@@ -155,14 +168,21 @@ class IngredientPickerPopup(Popup):
         self.search.bind(text=lambda *_: self.render_list())
         root.add_widget(self.search)
 
-        self.scroll = ScrollView(do_scroll_x=False, bar_width=dp(8), scroll_type=["bars", "content"])
-        self.list_box = BoxLayout(orientation="vertical", size_hint_y=None, spacing=dp(6), padding=(0, dp(4)))
-        self.list_box.bind(minimum_height=self.list_box.setter("height"))
-        self.scroll.add_widget(self.list_box)
-        root.add_widget(self.scroll)
+        self.rv = RecycleView(bar_width=dp(8), scroll_type=["bars", "content"])
+        self.rv.viewclass = "IngredientRow"
+        self.rv.layout_manager = RecycleBoxLayout(
+            default_size=(None, dp(56)),
+            default_size_hint=(1, None),
+            size_hint_y=None,
+            spacing=dp(6),
+            padding=(0, dp(4)),
+            orientation="vertical",
+        )
+        self.rv.layout_manager.bind(minimum_height=self.rv.layout_manager.setter("height"))
+        root.add_widget(self.rv)
 
         actions = BoxLayout(size_hint_y=None, height=dp(58), spacing=dp(8))
-        clear_btn = Button(text="Clear assignment")
+        clear_btn = Button(text="Clear")
         clear_btn.bind(on_release=lambda *_: self.pick(None))
         close_btn = Button(text="Close")
         close_btn.bind(on_release=lambda *_: self.dismiss())
@@ -175,16 +195,11 @@ class IngredientPickerPopup(Popup):
 
     def render_list(self):
         term = self.search.text.lower().strip()
-        self.list_box.clear_widgets()
-        for ingredient in self.ingredients:
-            if term and term not in ingredient.lower():
-                continue
-            btn = ScrollFriendlyButton(text=ingredient, size_hint_y=None, height=dp(56))
-            btn.bind(on_release=partial(self._pick_button, ingredient))
-            self.list_box.add_widget(btn)
-
-    def _pick_button(self, ingredient, *_):
-        self.pick(ingredient)
+        self.rv.data = [
+            {"ingredient": ingredient, "popup": self}
+            for ingredient in self.ingredients
+            if not term or term in ingredient.lower()
+        ]
 
     def pick(self, ingredient: Optional[str]):
         self.on_pick(ingredient)
