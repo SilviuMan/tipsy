@@ -3,6 +3,8 @@ from pathlib import Path
 from time import monotonic
 from typing import Dict, List, Optional
 
+import json
+
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.properties import BooleanProperty, ListProperty, StringProperty
@@ -127,8 +129,9 @@ class IngredientRow(RecycleDataViewBehavior, ButtonBehavior, Label):
 
     def refresh_view_attrs(self, rv, index, data):
         self.ingredient = data.get("ingredient", "")
-        self.text = self.ingredient
+        self.text = data.get("text", self.ingredient)
         self.popup = data.get("popup")
+        self.color = (1, 1, 1, 1)
         return super().refresh_view_attrs(rv, index, data)
 
     def on_touch_move(self, touch):
@@ -183,11 +186,11 @@ class IngredientPickerPopup(Popup):
         root.add_widget(self.search)
 
         self.rv = RecycleView(bar_width=dp(8), scroll_type=["bars", "content"])
-        self.rv.viewclass = "IngredientRow"
+        self.rv.viewclass = IngredientRow
         lm = RecycleBoxLayout(
             default_size=(None, dp(56)),
             default_size_hint=(1, None),
-            size_hint_y=None,
+            size_hint=(1, None),
             spacing=dp(6),
             padding=(0, dp(4)),
             orientation="vertical",
@@ -222,7 +225,7 @@ class IngredientPickerPopup(Popup):
     def render_list(self):
         term = self.search.text.lower().strip()
         self.rv.data = [
-            {"ingredient": ingredient, "popup": self}
+            {"text": ingredient, "ingredient": ingredient, "popup": self}
             for ingredient in self.ingredients
             if not term or term in ingredient.lower()
         ]
@@ -292,9 +295,38 @@ class SettingsScreen(Screen):
 
         self.ids.pump_rv.data = rows
 
+    def _extract_ingredients_from_file(self, recipe_file: Path) -> List[str]:
+        try:
+            payload = json.loads(recipe_file.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return []
+
+        discovered = set()
+        for recipe in payload.get("cocktails", []):
+            for step in recipe.get("steps", []):
+                ingredient = step.get("ingredient") if isinstance(step, dict) else None
+                if ingredient:
+                    discovered.add(ingredient)
+
+        return sorted(discovered)
+
+    def _collect_picker_ingredients(self) -> List[str]:
+        app = self.manager.app
+        ingredients = sorted(app.recipe_store.get_all_ingredients())
+        if ingredients:
+            return ingredients
+
+        # Recovery path for stale/failed initial store load.
+        app.recipe_store.load()
+        ingredients = sorted(app.recipe_store.get_all_ingredients())
+        if ingredients:
+            return ingredients
+
+        return self._extract_ingredients_from_file(app.recipe_store.recipes_file)
+
     def open_picker(self, pump_id: int, *_):
         app = self.manager.app
-        ingredients = list(app.recipe_store.get_all_ingredients())
+        ingredients = self._collect_picker_ingredients()
 
         def on_pick(ingredient):
             app.pump_store.set_ingredient(pump_id, ingredient)
