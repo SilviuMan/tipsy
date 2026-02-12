@@ -117,6 +117,11 @@ The app also attempts these commands on startup.
 python3 main.py
 ```
 
+## Virtual keyboard note (Raspberry Pi touchscreen)
+- The app forces Kivy to use the docked software keyboard (`keyboard_mode = dock`) in `main.py`.
+- If you still see double typing, inspect `~/.kivy/config.ini` under `[input]` and remove duplicate provider lines such as:
+  - `%(name)s = probesysfs,provider=hidinput`
+
 ## Data files
 - `data/recipes.json` - cocktail definitions and ml steps.
 - `data/pumps.json` - 10 pump GPIO, ingredient assignment, and `ml_per_sec`.

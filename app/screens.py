@@ -1,3 +1,4 @@
+from functools import partial
 from pathlib import Path
 from time import monotonic
 from typing import Dict, List, Optional
@@ -10,7 +11,6 @@ from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.recycleview import RecycleView
-from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.screenmanager import Screen
@@ -236,29 +236,35 @@ class SettingsScreen(Screen):
         popup.content = content
         popup.open()
 
+    def handle_row(self, pump_id: int, kind: str):
+        if kind == "calibration":
+            self.manager.app.show_calibration()
+            return
+        if kind == "exit":
+            self.confirm_exit()
+            return
+        if kind == "pump" and pump_id >= 0:
+            self.open_picker(pump_id)
+
     def refresh(self):
-        container = self.ids.pump_list
-        container.clear_widgets()
         app = self.manager.app
-
-        open_calib = Button(text="Open Calibration", size_hint_y=None, height=90)
-        open_calib.bind(on_release=lambda *_: self.manager.app.show_calibration())
-        container.add_widget(open_calib)
-
-        exit_btn = Button(text="Exit App", size_hint_y=None, height=90)
-        exit_btn.bind(on_release=lambda *_: self.confirm_exit())
-        container.add_widget(exit_btn)
+        rows = [
+            {"pump_id": -1, "kind": "calibration", "text": "Open Calibration", "button_text": "Open"},
+            {"pump_id": -2, "kind": "exit", "text": "Exit App", "button_text": "Exit"},
+        ]
 
         for pump in app.pump_store.pumps:
-            row = BoxLayout(size_hint_y=None, height=90, spacing=8)
             ingredient = pump.get("ingredient") or "<unassigned>"
-            label = Label(text=f"Pump {pump['id']} (GPIO {pump['gpio']}): {ingredient}", halign="left", valign="middle")
-            label.bind(size=lambda inst, _: setattr(inst, "text_size", inst.size))
-            btn = ScrollFriendlyButton(text="Assign", size_hint_x=None, width=160)
-            btn.bind(on_release=partial(self.open_picker, pump["id"]))
-            row.add_widget(label)
-            row.add_widget(btn)
-            container.add_widget(row)
+            rows.append(
+                {
+                    "pump_id": pump["id"],
+                    "kind": "pump",
+                    "text": f"Pump {pump['id']} (GPIO {pump['gpio']}): {ingredient}",
+                    "button_text": "Assign",
+                }
+            )
+
+        self.ids.pump_rv.data = rows
 
     def open_picker(self, pump_id: int, *_):
         app = self.manager.app

@@ -1,4 +1,5 @@
 #:import dp kivy.metrics.dp
+#:import Window kivy.core.window.Window
 #:import MDIconButton kivymd.uix.button.MDIconButton
 
 <IngredientRow>:
@@ -23,7 +24,7 @@
     spacing: dp(12)
     padding: dp(12), dp(10)
     size_hint_x: None
-    width: min(root.width if root.width else dp(420), root.height if root.height else dp(420)) * 0.76
+    width: min(Window.width, Window.height) * 0.64
     pos_hint: {"center_x": 0.5}
     canvas.before:
         Color:
@@ -60,6 +61,36 @@
         rounded_button: True
         on_release: root.go_settings()
 
+
+
+<PumpRow@BoxLayout>:
+    pump_id: 0
+    text: ""
+    kind: "pump"
+    button_text: "Assign"
+    orientation: "horizontal"
+    spacing: dp(10)
+    padding: dp(12), dp(10)
+    size_hint_y: None
+    height: dp(90)
+    canvas.before:
+        Color:
+            rgba: 0.13, 0.16, 0.24, 1
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [12,]
+    Label:
+        text: root.text
+        color: 0.95, 0.98, 1, 1
+        halign: "left"
+        valign: "middle"
+        text_size: self.size
+    Button:
+        text: root.button_text
+        size_hint: None, 1
+        width: dp(160)
+        on_release: app.root.get_screen("settings").handle_row(root.pump_id, root.kind)
 
 <CocktailCard>:
     orientation: 'vertical'
@@ -190,15 +221,20 @@
             height: min(root.width, root.height) * 0.84
             pos_hint: {'center_x': 0.5, 'center_y': 0.5}
             HeaderBar:
-            ScrollView:
+            RecycleView:
+                id: pump_rv
+                viewclass: "PumpRow"
                 do_scroll_x: False
-                BoxLayout:
-                    id: pump_list
-                    orientation: 'vertical'
+                scroll_type: ["bars", "content"]
+                bar_width: dp(10)
+                RecycleBoxLayout:
+                    default_size: None, dp(90)
+                    default_size_hint: 1, None
                     size_hint_y: None
+                    height: self.minimum_height
+                    orientation: "vertical"
                     spacing: dp(10)
                     padding: dp(8)
-                    height: self.minimum_height
 
 <CalibrationScreen>:
     BoxLayout:
