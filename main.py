@@ -32,6 +32,7 @@ sanitize_kivy_input_config()
 
 from kivy.config import Config
 
+# Keep Config settings before any other Kivy imports to avoid keyboard/input race issues.
 Config.set("kivy", "keyboard_mode", "dock")
 Config.set("kivy", "keyboard_layout", "qwerty")
 Config.set("graphics", "width", "1080")
