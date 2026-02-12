@@ -302,11 +302,33 @@ class SettingsScreen(Screen):
             return []
 
         discovered = set()
-        for recipe in payload.get("cocktails", []):
+        recipes = []
+        if isinstance(payload, list):
+            recipes = [recipe for recipe in payload if isinstance(recipe, dict)]
+        elif isinstance(payload, dict):
+            for key in ("cocktails", "recipes", "drinks"):
+                candidate = payload.get(key)
+                if isinstance(candidate, list):
+                    recipes = [recipe for recipe in candidate if isinstance(recipe, dict)]
+                    break
+
+        for recipe in recipes:
             for step in recipe.get("steps", []):
                 ingredient = step.get("ingredient") if isinstance(step, dict) else None
                 if ingredient:
                     discovered.add(ingredient)
+
+            raw_ingredients = recipe.get("ingredients", [])
+            if isinstance(raw_ingredients, dict):
+                discovered.update(i for i in raw_ingredients.keys() if i)
+            elif isinstance(raw_ingredients, list):
+                for item in raw_ingredients:
+                    if isinstance(item, str) and item:
+                        discovered.add(item)
+                    elif isinstance(item, dict):
+                        ingredient = item.get("ingredient") or item.get("name")
+                        if ingredient:
+                            discovered.add(ingredient)
 
         return sorted(discovered)
 

@@ -16,8 +16,23 @@ class RecipeStore:
     def load(self) -> List[Dict]:
         with self.recipes_file.open("r", encoding="utf-8") as fh:
             payload = json.load(fh)
-        self._recipes = payload.get("cocktails", [])
+        self._recipes = self._extract_recipes(payload)
         return self._recipes
+
+    @staticmethod
+    def _extract_recipes(payload) -> List[Dict]:
+        if isinstance(payload, list):
+            return [recipe for recipe in payload if isinstance(recipe, dict)]
+
+        if not isinstance(payload, dict):
+            return []
+
+        for key in ("cocktails", "recipes", "drinks"):
+            recipes = payload.get(key)
+            if isinstance(recipes, list):
+                return [recipe for recipe in recipes if isinstance(recipe, dict)]
+
+        return []
 
     @property
     def recipes(self) -> List[Dict]:
