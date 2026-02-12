@@ -127,8 +127,9 @@ class IngredientRow(RecycleDataViewBehavior, ButtonBehavior, Label):
 
     def refresh_view_attrs(self, rv, index, data):
         self.ingredient = data.get("ingredient", "")
-        self.text = self.ingredient
+        self.text = data.get("text", self.ingredient)
         self.popup = data.get("popup")
+        self.color = (0.95, 0.98, 1, 1)
         return super().refresh_view_attrs(rv, index, data)
 
     def on_touch_move(self, touch):
@@ -183,11 +184,11 @@ class IngredientPickerPopup(Popup):
         root.add_widget(self.search)
 
         self.rv = RecycleView(bar_width=dp(8), scroll_type=["bars", "content"])
-        self.rv.viewclass = "IngredientRow"
+        self.rv.viewclass = IngredientRow
         lm = RecycleBoxLayout(
             default_size=(None, dp(56)),
             default_size_hint=(1, None),
-            size_hint_y=None,
+            size_hint=(1, None),
             spacing=dp(6),
             padding=(0, dp(4)),
             orientation="vertical",
@@ -222,7 +223,7 @@ class IngredientPickerPopup(Popup):
     def render_list(self):
         term = self.search.text.lower().strip()
         self.rv.data = [
-            {"ingredient": ingredient, "popup": self}
+            {"text": ingredient, "ingredient": ingredient, "popup": self}
             for ingredient in self.ingredients
             if not term or term in ingredient.lower()
         ]
