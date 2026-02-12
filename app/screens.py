@@ -171,7 +171,7 @@ class IngredientPickerPopup(Popup):
 
         self.rv = RecycleView(bar_width=dp(8), scroll_type=["bars", "content"])
         self.rv.viewclass = "IngredientRow"
-        self.rv.layout_manager = RecycleBoxLayout(
+        lm = RecycleBoxLayout(
             default_size=(None, dp(56)),
             default_size_hint=(1, None),
             size_hint_y=None,
@@ -179,7 +179,9 @@ class IngredientPickerPopup(Popup):
             padding=(0, dp(4)),
             orientation="vertical",
         )
-        self.rv.layout_manager.bind(minimum_height=self.rv.layout_manager.setter("height"))
+        lm.bind(minimum_height=lm.setter("height"))
+        self.rv.add_widget(lm)
+        self.rv.layout_manager = lm
         root.add_widget(self.rv)
 
         actions = BoxLayout(size_hint_y=None, height=dp(58), spacing=dp(8))
