@@ -12,7 +12,7 @@ Config.set("graphics", "resizable", "0")
 Config.set("graphics", "borderless", "1")
 Config.set("graphics", "fullscreen", "1")
 
-from kivy.app import App
+from kivymd.app import MDApp
 from kivy.clock import Clock
 from kivy.lang import Builder
 from kivy.resources import resource_add_path
@@ -30,7 +30,7 @@ from hardware.pump_driver import PumpDriver
 BASE_DIR = Path(__file__).resolve().parent
 
 
-class CocktailBotApp(App):
+class CocktailBotApp(MDApp):
     def build(self):
         self.title = "CocktailBot"
         self.base_dir = BASE_DIR
