@@ -9,13 +9,31 @@ from kivy.properties import BooleanProperty, ListProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-from kivy.uix.modalview import ModalView
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.screenmanager import Screen
 from kivy.uix.textinput import TextInput
+from kivy.metrics import dp
 
 from core.availability import sort_recipes_by_availability
+
+
+class ScrollFriendlyButton(Button):
+    drag_threshold = dp(12)
+
+    def on_touch_down(self, touch):
+        if self.collide_point(*touch.pos):
+            touch.ud[f"{id(self)}_down"] = touch.pos
+        return super().on_touch_down(touch)
+
+    def on_touch_move(self, touch):
+        key = f"{id(self)}_down"
+        if touch.grab_current is self and key in touch.ud:
+            start_x, start_y = touch.ud[key]
+            if abs(touch.x - start_x) > self.drag_threshold or abs(touch.y - start_y) > self.drag_threshold:
+                touch.ungrab(self)
+                return False
+        return super().on_touch_move(touch)
 
 
 class HeaderBar(BoxLayout):
@@ -86,7 +104,14 @@ class HomeScreen(Screen):
         if image_source.startswith(("atlas://", "http://", "https://")):
             return image_source
 
-        return image_source if Path(image_source).exists() else fallback
+        image_path = Path(image_source)
+        if image_path.is_absolute():
+            return str(image_path) if image_path.exists() else fallback
+
+        app = App.get_running_app()
+        base_dir = Path(getattr(app, "base_dir", Path.cwd()))
+        resolved = base_dir / image_path
+        return str(resolved) if resolved.exists() else fallback
 
     def select_by_index(self, idx: Optional[int]):
         if idx is None:
@@ -109,30 +134,43 @@ class HomeScreen(Screen):
         app.start_pour(recipe)
 
 
-class IngredientPickerModal(ModalView):
+class IngredientPickerPopup(Popup):
     def __init__(self, ingredients: List[str], on_pick, **kwargs):
         super().__init__(**kwargs)
-        self.size_hint = (0.8, 0.8)
-        self.auto_dismiss = True
+        self.title = "Assign ingredient to pump"
+        self.size_hint = (0.75, 0.75)
+        self.pos_hint = {"center_x": 0.5, "center_y": 0.5}
+        self.auto_dismiss = False
         self.on_pick = on_pick
         self.ingredients = sorted(ingredients)
 
-        root = BoxLayout(orientation="vertical", spacing=8, padding=8)
-        self.search = TextInput(hint_text="Search ingredient", size_hint_y=None, height=50)
+        root = BoxLayout(orientation="vertical", spacing=dp(8), padding=dp(10))
+
+        self.search = TextInput(
+            hint_text="Search ingredient",
+            multiline=False,
+            size_hint_y=None,
+            height=dp(52),
+        )
         self.search.bind(text=lambda *_: self.render_list())
         root.add_widget(self.search)
 
-        self.scroll = ScrollView()
-        self.list_box = BoxLayout(orientation="vertical", size_hint_y=None, spacing=6)
+        self.scroll = ScrollView(do_scroll_x=False, bar_width=dp(8), scroll_type=["bars", "content"])
+        self.list_box = BoxLayout(orientation="vertical", size_hint_y=None, spacing=dp(6), padding=(0, dp(4)))
         self.list_box.bind(minimum_height=self.list_box.setter("height"))
         self.scroll.add_widget(self.list_box)
         root.add_widget(self.scroll)
 
-        none_btn = Button(text="Clear assignment", size_hint_y=None, height=60)
-        none_btn.bind(on_release=lambda *_: self.pick(None))
-        root.add_widget(none_btn)
+        actions = BoxLayout(size_hint_y=None, height=dp(58), spacing=dp(8))
+        clear_btn = Button(text="Clear assignment")
+        clear_btn.bind(on_release=lambda *_: self.pick(None))
+        close_btn = Button(text="Close")
+        close_btn.bind(on_release=lambda *_: self.dismiss())
+        actions.add_widget(clear_btn)
+        actions.add_widget(close_btn)
+        root.add_widget(actions)
 
-        self.add_widget(root)
+        self.content = root
         self.render_list()
 
     def render_list(self):
@@ -141,7 +179,7 @@ class IngredientPickerModal(ModalView):
         for ingredient in self.ingredients:
             if term and term not in ingredient.lower():
                 continue
-            btn = Button(text=ingredient, size_hint_y=None, height=60)
+            btn = ScrollFriendlyButton(text=ingredient, size_hint_y=None, height=dp(56))
             btn.bind(on_release=partial(self._pick_button, ingredient))
             self.list_box.add_widget(btn)
 
@@ -157,6 +195,32 @@ class SettingsScreen(Screen):
     def on_pre_enter(self, *args):
         self.refresh()
 
+    def confirm_exit(self):
+        app = self.manager.app
+        content = BoxLayout(orientation="vertical", spacing=dp(10), padding=dp(10))
+        content.add_widget(Label(text="Exit CocktailBot?\nPumps will be stopped safely."))
+        actions = BoxLayout(size_hint_y=None, height=dp(56), spacing=dp(10))
+        popup = Popup(
+            title="Confirm Exit",
+            size_hint=(0.62, 0.34),
+            auto_dismiss=False,
+        )
+        cancel_btn = Button(text="Cancel")
+        exit_btn = Button(text="Exit")
+        cancel_btn.bind(on_release=lambda *_: popup.dismiss())
+
+        def do_exit(*_):
+            popup.dismiss()
+            app.safe_shutdown()
+            app.stop()
+
+        exit_btn.bind(on_release=do_exit)
+        actions.add_widget(cancel_btn)
+        actions.add_widget(exit_btn)
+        content.add_widget(actions)
+        popup.content = content
+        popup.open()
+
     def refresh(self):
         container = self.ids.pump_list
         container.clear_widgets()
@@ -166,12 +230,16 @@ class SettingsScreen(Screen):
         open_calib.bind(on_release=lambda *_: self.manager.app.show_calibration())
         container.add_widget(open_calib)
 
+        exit_btn = Button(text="Exit App", size_hint_y=None, height=90)
+        exit_btn.bind(on_release=lambda *_: self.confirm_exit())
+        container.add_widget(exit_btn)
+
         for pump in app.pump_store.pumps:
             row = BoxLayout(size_hint_y=None, height=90, spacing=8)
             ingredient = pump.get("ingredient") or "<unassigned>"
             label = Label(text=f"Pump {pump['id']} (GPIO {pump['gpio']}): {ingredient}", halign="left", valign="middle")
             label.bind(size=lambda inst, _: setattr(inst, "text_size", inst.size))
-            btn = Button(text="Assign", size_hint_x=None, width=160)
+            btn = ScrollFriendlyButton(text="Assign", size_hint_x=None, width=160)
             btn.bind(on_release=partial(self.open_picker, pump["id"]))
             row.add_widget(label)
             row.add_widget(btn)
@@ -186,7 +254,7 @@ class SettingsScreen(Screen):
             self.refresh()
             app.refresh_home()
 
-        IngredientPickerModal(ingredients, on_pick).open()
+        IngredientPickerPopup(ingredients, on_pick).open()
 
 
 class CalibrationScreen(Screen):
