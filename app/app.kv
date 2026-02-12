@@ -2,7 +2,7 @@
 #:import Window kivy.core.window.Window
 #:import MDIconButton kivymd.uix.button.MDIconButton
 
-<IngredientRow>:
+<AssignableDrinkRow>:
     size_hint_y: None
     height: dp(56)
     text_size: self.width - dp(16), None
@@ -12,7 +12,7 @@
     color: 1, 1, 1, 1
     canvas.before:
         Color:
-            rgba: (0.2, 0.25, 0.36, 1) if self.state == "down" else (0.13, 0.16, 0.24, 1)
+            rgba: (0.27, 0.49, 0.87, 1) if self.selected else ((0.2, 0.25, 0.36, 1) if self.state == "down" else (0.13, 0.16, 0.24, 1))
         RoundedRectangle:
             pos: self.pos
             size: self.size
@@ -237,6 +237,94 @@
                     orientation: "vertical"
                     spacing: dp(10)
                     padding: dp(8)
+
+
+<AssignPumpScreen>:
+    BoxLayout:
+        orientation: 'vertical'
+        canvas.before:
+            Color:
+                rgba: 0.01, 0.01, 0.03, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+            Color:
+                rgba: 0.08, 0.11, 0.2, 1
+            Ellipse:
+                pos: (self.center_x - min(self.width, self.height) * 0.49, self.center_y - min(self.width, self.height) * 0.49)
+                size: (min(self.width, self.height) * 0.98, min(self.width, self.height) * 0.98)
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: dp(12)
+            size_hint: None, None
+            width: min(root.width, root.height) * 0.84
+            height: min(root.width, root.height) * 0.84
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            canvas.before:
+                Color:
+                    rgba: 0.09, 0.12, 0.2, 0.88
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [dp(20), ]
+            BoxLayout:
+                size_hint_y: None
+                height: dp(90)
+                spacing: dp(8)
+                Button:
+                    text: "← Back"
+                    size_hint_x: None
+                    width: dp(160)
+                    on_release: root.back_to_settings()
+                BoxLayout:
+                    orientation: 'vertical'
+                    Label:
+                        text: root.pump_title
+                        font_size: '34sp'
+                        bold: True
+                        color: 0.95, 0.98, 1, 1
+                        halign: 'left'
+                        valign: 'middle'
+                        text_size: self.size
+                    Label:
+                        text: "Current drink: " + root.current_drink
+                        font_size: '22sp'
+                        color: 0.75, 0.84, 1, 1
+                        halign: 'left'
+                        valign: 'middle'
+                        text_size: self.size
+            TextInput:
+                id: drink_search
+                hint_text: "Search drink"
+                multiline: False
+                size_hint_y: None
+                height: dp(56)
+                font_size: '24sp'
+                on_text: root.render_list()
+            RecycleView:
+                id: drink_rv
+                viewclass: "AssignableDrinkRow"
+                do_scroll_x: False
+                scroll_type: ["bars", "content"]
+                bar_width: dp(10)
+                layout_manager: drink_layout
+                RecycleBoxLayout:
+                    id: drink_layout
+                    default_size: None, dp(74)
+                    default_size_hint: 1, None
+                    size_hint_y: None
+                    height: self.minimum_height
+                    orientation: "vertical"
+                    spacing: dp(8)
+                    padding: dp(8)
+            Button:
+                text: "Save"
+                size_hint_y: None
+                height: dp(84)
+                font_size: '30sp'
+                bold: True
+                on_release: root.save_assignment()
+
 
 <CalibrationScreen>:
     BoxLayout:
