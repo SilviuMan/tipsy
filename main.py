@@ -49,7 +49,7 @@ from kivy.uix.button import Button
 from kivy.uix.popup import Popup
 from kivy.uix.screenmanager import ScreenManager
 
-from app.screens import CalibrationScreen, DoneScreen, HomeScreen, PouringScreen, SettingsScreen
+from app.screens import AssignPumpScreen, CalibrationScreen, DoneScreen, HomeScreen, PouringScreen, SettingsScreen
 from core.pumps import PumpStore
 from core.recipes import RecipeStore
 from hardware.pour_manager import PourManager
@@ -79,6 +79,7 @@ class CocktailBotApp(MDApp):
         self.sm.app = self
         self.sm.add_widget(HomeScreen(name="home"))
         self.sm.add_widget(SettingsScreen(name="settings"))
+        self.sm.add_widget(AssignPumpScreen(name="assign_pump"))
         self.sm.add_widget(CalibrationScreen(name="calibration"))
         self.sm.add_widget(PouringScreen(name="pouring"))
         self.sm.add_widget(DoneScreen(name="done"))

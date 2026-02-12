@@ -7,11 +7,10 @@ import json
 
 from kivy.app import App
 from kivy.clock import Clock
-from kivy.properties import BooleanProperty, ListProperty, StringProperty
+from kivy.properties import BooleanProperty, ListProperty, NumericProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.label import Label
-from kivy.uix.popup import Popup
 from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.uix.recycleview import RecycleView
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
@@ -122,15 +121,17 @@ class HomeScreen(Screen):
         app.start_pour(recipe)
 
 
-class IngredientRow(RecycleDataViewBehavior, ButtonBehavior, Label):
-    ingredient = StringProperty("")
-    popup = None
+class AssignableDrinkRow(RecycleDataViewBehavior, ButtonBehavior, Label):
+    drink = StringProperty("")
+    assign_screen = None
+    selected = BooleanProperty(False)
     drag_threshold = dp(12)
 
     def refresh_view_attrs(self, rv, index, data):
-        self.ingredient = data.get("ingredient", "")
-        self.text = data.get("text", self.ingredient)
-        self.popup = data.get("popup")
+        self.drink = data.get("drink", "")
+        self.text = data.get("text", self.drink)
+        self.assign_screen = data.get("assign_screen")
+        self.selected = data.get("selected", False)
         self.color = (1, 1, 1, 1)
         return super().refresh_view_attrs(rv, index, data)
 
@@ -148,91 +149,54 @@ class IngredientRow(RecycleDataViewBehavior, ButtonBehavior, Label):
         return super().on_touch_down(touch)
 
     def on_release(self):
-        if self.popup:
-            self.popup.pick(self.ingredient)
+        if self.assign_screen:
+            self.assign_screen.select_drink(self.drink)
 
 
-class IngredientPickerPopup(Popup):
-    def __init__(self, ingredients: List[str], on_pick, **kwargs):
-        super().__init__(**kwargs)
-        self.title = "Assign ingredient to pump"
-        self.size_hint = (0.75, 0.75)
-        self.pos_hint = {"center_x": 0.5, "center_y": 0.5}
-        self.auto_dismiss = False
-        self.title_color = (1, 1, 1, 1)
-        self.separator_color = (0.23, 0.33, 0.54, 1)
-        self.background_color = (0.04, 0.05, 0.08, 0.98)
-        self.on_pick = on_pick
-        self.ingredients = sorted(ingredients)
+class AssignPumpScreen(Screen):
+    pump_id = NumericProperty(-1)
+    pump_title = StringProperty("")
+    current_drink = StringProperty("<unassigned>")
+    selected_drink = StringProperty("")
+    drink_options = ListProperty([])
 
-        root = BoxLayout(orientation="vertical", spacing=dp(8), padding=dp(10))
-        with root.canvas.before:
-            Color(0.08, 0.1, 0.16, 1)
-            self._bg_rect = RoundedRectangle(pos=root.pos, size=root.size, radius=[dp(14)])
-        root.bind(pos=self._sync_popup_bg, size=self._sync_popup_bg)
-
-        self.search = TextInput(
-            hint_text="Search ingredient",
-            multiline=False,
-            size_hint_y=None,
-            height=dp(52),
-            foreground_color=(1, 1, 1, 1),
-            hint_text_color=(0.72, 0.77, 0.88, 1),
-            background_color=(0.15, 0.18, 0.28, 1),
-            cursor_color=(1, 1, 1, 1),
-            selection_color=(0.27, 0.47, 0.85, 0.45),
-        )
-        self.search.bind(text=lambda *_: self.render_list())
-        root.add_widget(self.search)
-
-        self.rv = RecycleView(bar_width=dp(8), scroll_type=["bars", "content"])
-        self.rv.viewclass = IngredientRow
-        lm = RecycleBoxLayout(
-            default_size=(None, dp(56)),
-            default_size_hint=(1, None),
-            size_hint=(1, None),
-            spacing=dp(6),
-            padding=(0, dp(4)),
-            orientation="vertical",
-        )
-        lm.bind(minimum_height=lm.setter("height"))
-        self.rv.add_widget(lm)
-        self.rv.layout_manager = lm
-        root.add_widget(self.rv)
-
-        actions = BoxLayout(size_hint_y=None, height=dp(58), spacing=dp(8))
-        clear_btn = Button(text="Clear")
-        clear_btn.color = (1, 1, 1, 1)
-        clear_btn.background_normal = ""
-        clear_btn.background_color = (0.2, 0.24, 0.35, 1)
-        clear_btn.bind(on_release=lambda *_: self.pick(None))
-        close_btn = Button(text="Close")
-        close_btn.color = (1, 1, 1, 1)
-        close_btn.background_normal = ""
-        close_btn.background_color = (0.25, 0.3, 0.44, 1)
-        close_btn.bind(on_release=lambda *_: self.dismiss())
-        actions.add_widget(clear_btn)
-        actions.add_widget(close_btn)
-        root.add_widget(actions)
-
-        self.content = root
+    def configure(self, pump: dict, options: List[str]):
+        self.pump_id = pump["id"]
+        self.pump_title = f"Pump {pump['id']}"
+        self.current_drink = pump.get("ingredient") or "<unassigned>"
+        self.selected_drink = self.current_drink
+        self.drink_options = sorted(options)
         self.render_list()
 
-    def _sync_popup_bg(self, widget, *_):
-        self._bg_rect.pos = widget.pos
-        self._bg_rect.size = widget.size
-
     def render_list(self):
-        term = self.search.text.lower().strip()
-        self.rv.data = [
-            {"text": ingredient, "ingredient": ingredient, "popup": self}
-            for ingredient in self.ingredients
-            if not term or term in ingredient.lower()
+        term = self.ids.drink_search.text.lower().strip()
+        options = ["<unassigned>"] + self.drink_options
+        self.ids.drink_rv.data = [
+            {
+                "text": drink,
+                "drink": drink,
+                "selected": drink == self.selected_drink,
+                "assign_screen": self,
+            }
+            for drink in options
+            if not term or term in drink.lower()
         ]
 
-    def pick(self, ingredient: Optional[str]):
-        self.on_pick(ingredient)
-        self.dismiss()
+    def select_drink(self, drink: str):
+        self.selected_drink = drink
+        self.render_list()
+
+    def back_to_settings(self):
+        self.manager.current = "settings"
+
+    def save_assignment(self):
+        ingredient = None if self.selected_drink == "<unassigned>" else self.selected_drink
+        app = self.manager.app
+        app.pump_store.set_ingredient(self.pump_id, ingredient)
+        app.refresh_home()
+        settings = self.manager.get_screen("settings")
+        settings.refresh()
+        self.manager.current = "settings"
 
 
 class SettingsScreen(Screen):
@@ -348,14 +312,14 @@ class SettingsScreen(Screen):
 
     def open_picker(self, pump_id: int, *_):
         app = self.manager.app
-        ingredients = self._collect_picker_ingredients()
+        drinks = self._collect_picker_ingredients()
+        pump = next((item for item in app.pump_store.pumps if item["id"] == pump_id), None)
+        if not pump:
+            return
 
-        def on_pick(ingredient):
-            app.pump_store.set_ingredient(pump_id, ingredient)
-            self.refresh()
-            app.refresh_home()
-
-        IngredientPickerPopup(ingredients, on_pick).open()
+        assign_screen = self.manager.get_screen("assign_pump")
+        assign_screen.configure(pump, drinks)
+        self.manager.current = "assign_pump"
 
 
 class CalibrationScreen(Screen):
