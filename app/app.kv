@@ -1,6 +1,22 @@
 #:import dp kivy.metrics.dp
 #:import MDIconButton kivymd.uix.button.MDIconButton
 
+<IngredientRow>:
+    size_hint_y: None
+    height: dp(56)
+    text_size: self.width - dp(16), None
+    halign: "left"
+    valign: "middle"
+    padding_x: dp(8)
+    color: 0.95, 0.98, 1, 1
+    canvas.before:
+        Color:
+            rgba: (0.2, 0.25, 0.36, 1) if self.state == "down" else (0.13, 0.16, 0.24, 1)
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [10, ]
+
 <HeaderBar>:
     size_hint_y: None
     height: dp(92)
